@@ -24,19 +24,19 @@ export class CompaniesRepository {
     });
   }
 
-  async createCompany(createCompanyDto: CreateCompanyDto): Promise<CompanyDto> {
+  async createCompany(payload: CreateCompanyDto): Promise<CompanyDto> {
     return await this.prisma.companies.create({
-      data: createCompanyDto,
+      data: payload,
     });
   }
 
   async updateCompany(
     id: string,
-    updateCompanyDto: UpdateCompanyDto,
+    payload: UpdateCompanyDto,
   ): Promise<CompanyDto | null> {
     return await this.prisma.companies.update({
       where: { id, deletedAt: null },
-      data: updateCompanyDto,
+      data: payload,
     });
   }
 

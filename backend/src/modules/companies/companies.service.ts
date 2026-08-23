@@ -26,8 +26,8 @@ export class CompaniesService {
     return company;
   }
 
-  async create(createCompanyDto: CreateCompanyDto): Promise<CompanyDto> {
-    const { cnpj } = createCompanyDto;
+  async create(payload: CreateCompanyDto): Promise<CompanyDto> {
+    const { cnpj } = payload;
 
     const existingCompany =
       await this.companiesRepository.findCompanyByCnpj(cnpj);
@@ -36,12 +36,12 @@ export class CompaniesService {
       throw new ConflictException('Empresa com este CNPJ já existe.');
     }
 
-    return await this.companiesRepository.createCompany(createCompanyDto);
+    return await this.companiesRepository.createCompany(payload);
   }
 
   async update(
     id: string,
-    updateCompanyDto: UpdateCompanyDto,
+    payload: UpdateCompanyDto,
   ): Promise<CompanyDto | null> {
     const existingCompany = await this.companiesRepository.findCompanyById(id);
 
@@ -49,7 +49,16 @@ export class CompaniesService {
       throw new NotFoundException('Empresa não encontrada.');
     }
 
-    return await this.companiesRepository.updateCompany(id, updateCompanyDto);
+    if (payload.cnpj && payload.cnpj !== existingCompany.cnpj) {
+      const companyWithSameCnpj =
+        await this.companiesRepository.findCompanyByCnpj(payload.cnpj);
+
+      if (companyWithSameCnpj) {
+        throw new ConflictException('Empresa com este CNPJ já existe.');
+      }
+    }
+
+    return await this.companiesRepository.updateCompany(id, payload);
   }
 
   async delete(id: string): Promise<CompanyDto | null> {

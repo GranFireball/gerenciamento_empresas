@@ -93,11 +93,11 @@ export class CompaniesController {
   @Post()
   async create(
     @Body(new ZodValidationPipe(CreateCompanySchema))
-    createCompanyDto: CreateCompanyDto,
+    payload: CreateCompanyDto,
     @Res() res: Response,
   ) {
     try {
-      const company = await this.companiesService.create(createCompanyDto);
+      const company = await this.companiesService.create(payload);
 
       return this.handleSucccess(
         res,
@@ -114,11 +114,11 @@ export class CompaniesController {
   async update(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(UpdateCompanySchema))
-    body: UpdateCompanyDto,
+    payload: UpdateCompanyDto,
     @Res() res: Response,
   ) {
     try {
-      const company = await this.companiesService.update(id, body);
+      const company = await this.companiesService.update(id, payload);
 
       return this.handleSucccess(
         res,
