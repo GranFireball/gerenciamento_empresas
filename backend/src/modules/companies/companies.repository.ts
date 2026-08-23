@@ -9,7 +9,9 @@ export class CompaniesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findCompanies(): Promise<CompanyDto[]> {
-    return await this.prisma.companies.findMany();
+    return await this.prisma.companies.findMany({
+      where: { deletedAt: null },
+    });
   }
 
   async findCompanyById(id: string): Promise<CompanyDto | null> {
@@ -35,14 +37,14 @@ export class CompaniesRepository {
     payload: UpdateCompanyDto,
   ): Promise<CompanyDto | null> {
     return await this.prisma.companies.update({
-      where: { id, deletedAt: null },
+      where: { id },
       data: payload,
     });
   }
 
   async deleteCompany(id: string): Promise<CompanyDto | null> {
     return await this.prisma.companies.update({
-      where: { id, deletedAt: null },
+      where: { id },
       data: { deletedAt: new Date() },
     });
   }
