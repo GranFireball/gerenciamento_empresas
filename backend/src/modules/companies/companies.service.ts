@@ -1,3 +1,4 @@
+import { EmailSerivce } from './../email/email.service';
 import {
   ConflictException,
   Injectable,
@@ -10,7 +11,10 @@ import { UpdateCompanyDto } from './schemas/update-company.schema';
 
 @Injectable()
 export class CompaniesService {
-  constructor(private readonly companiesRepository: CompaniesRepository) {}
+  constructor(
+    private readonly companiesRepository: CompaniesRepository,
+    private readonly emailService: EmailSerivce,
+  ) {}
 
   async listCompanies(): Promise<CompanyDto[]> {
     return await this.companiesRepository.findCompanies();
@@ -36,7 +40,12 @@ export class CompaniesService {
       throw new ConflictException('Empresa com este CNPJ já existe.');
     }
 
-    return await this.companiesRepository.createCompany(payload);
+    const createdCompany =
+      await this.companiesRepository.createCompany(payload);
+
+    await this.emailService.sendEmail(createdCompany);
+
+    return createdCompany;
   }
 
   async update(

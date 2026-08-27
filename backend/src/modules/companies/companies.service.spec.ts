@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test } from '@nestjs/testing';
 import { CompaniesRepository } from './companies.repository';
 import { CompaniesService } from './companies.service';
+import { EmailSerivce } from '../email/email.service';
 
 const mockCompaniesRepository = () => ({
   findCompanies: jest.fn(),
@@ -11,9 +13,14 @@ const mockCompaniesRepository = () => ({
   deleteCompany: jest.fn(),
 });
 
+const mockEmailService = () => ({
+  sendEmail: jest.fn(),
+});
+
 describe('CompaniesService', () => {
   let companiesService: CompaniesService;
   let repository: jest.Mocked<CompaniesRepository>;
+  let emailService: jest.Mocked<EmailSerivce>;
 
   const mockCompanies = [
     {
@@ -43,11 +50,13 @@ describe('CompaniesService', () => {
       providers: [
         CompaniesService,
         { provide: CompaniesRepository, useValue: mockCompaniesRepository() },
+        { provide: EmailSerivce, useValue: mockEmailService() },
       ],
     }).compile();
 
     companiesService = module.get(CompaniesService);
     repository = module.get(CompaniesRepository);
+    emailService = module.get(EmailSerivce);
   });
 
   describe('listCompanies', () => {
@@ -84,11 +93,11 @@ describe('CompaniesService', () => {
       );
       expect(repository.findCompanyById).toHaveBeenCalledWith(companyId);
       expect(repository.findCompanyById).toHaveBeenCalledTimes(1);
-    })
+    });
   });
 
   describe('create', () => {
-    it('should create a new company', async () => {
+    it('should create a new company and send email', async () => {
       const payload = {
         name: 'Empresa 3',
         cnpj: '11122233344455',
@@ -108,9 +117,11 @@ describe('CompaniesService', () => {
       expect(repository.findCompanyByCnpj).toHaveBeenCalledTimes(1);
       expect(repository.createCompany).toHaveBeenCalledWith(payload);
       expect(repository.createCompany).toHaveBeenCalledTimes(1);
+      expect(emailService.sendEmail).toHaveBeenCalledWith(createdCompany);
+      expect(emailService.sendEmail).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw ConflictException if company with the same CNPJ already exists', async () => {
+    it('should throw ConflictException and not send email if a company with the same CNPJ already exists', async () => {
       const payload = {
         name: 'Empresa 3',
         cnpj: mockCompanies[0].cnpj,
@@ -124,6 +135,7 @@ describe('CompaniesService', () => {
       expect(repository.findCompanyByCnpj).toHaveBeenCalledWith(payload.cnpj);
       expect(repository.findCompanyByCnpj).toHaveBeenCalledTimes(1);
       expect(repository.createCompany).not.toHaveBeenCalled();
+      expect(emailService.sendEmail).not.toHaveBeenCalled();
     });
   });
 
@@ -159,7 +171,7 @@ describe('CompaniesService', () => {
         cnpj: mockCompanies[0].cnpj,
         fantasyName: 'Nome fantasia 1 Atualizado',
         address: 'Rua 1 Atualizada',
-      }
+      };
       const updatedCompany = {
         ...mockCompanies[0],
         ...payload,
